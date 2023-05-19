@@ -1,7 +1,7 @@
 # Password Manager
 ### Trabajo Práctico - Informática 2023
 
-Como proyecto final de la materia, elegimos desarrollar un gestor de contraseñas que funcione de forma local.
+Como proyecto final de la materia, elegimos desarrollar un gestor de contraseñas que funcione de forma local en languaje C.
 Entre sus funciones, se encuentran:
   - Acceder ingresando contraseña maestra. Sí, como una llave maestra.
   - Ingresar nueva contraseña: el usuario introduce una contraseña y junto con un ID.
