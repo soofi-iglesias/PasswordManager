@@ -5,7 +5,6 @@
         SOFIA IGLESIAS
     INFORMATICA - 1C 2023
     INGENIERIA BIOMEDICA - UNIVERSIDAD NACIONAL DE SAN MARTIN
-    hola
 */
 
 #include <stdio.h>
