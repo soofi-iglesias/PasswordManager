@@ -18,9 +18,8 @@
 #define BUSCAR_CONTRASENA           3
 #define MODIFICAR_CONTRASENA        4
 #define ELIMINAR_CONTRASENA         5
-#define INGRESAR_MASTER             6
-#define LEVANTAR_ARCHIVO_USUARIOS   7
-#define INGRESAR_PERFIL             8
+#define LEVANTAR_ARCHIVO_USUARIOS   6
+#define INGRESAR_PERFIL             7
 #define SALIR                       10
 
 /*ESTADOS DE INGRESO*/
@@ -61,7 +60,6 @@ typedef struct user
 
 /*PROTOTIPOS DE FUNCIONES*/
 /*FUNCIONES GENERALES*/
-void maquinaUsuarios(void);
 void maquinaMenu(void);                 //FUNCION GENERAL DE LA MAQUINA DE ESTADOS
 void inicializar(void);                 //INICIALIZA LO QUE TIENE ADENTRO LA ESTRUCTURA --> TODO EN NO_INGRESADO O \0 (VACIO)
 void guardarArchivo(int posUsuario);              //ESCRIBE EL ARCHIVO EN EL QUE SE GUARDAN LAS CONTRASEÑAS (MISMO ARCHIVO DE DONDE LEVANTA LOS DATOS)
@@ -91,7 +89,7 @@ password manager[MAXIMO];                       //DECLARO EL VECTOR manager DEL 
 user perfil[MAXIMO];
 int posCoincidencia[MAXIMO];                    //VECTOR QUE LO USO PARA GUARDAR LAS POSICIONES DONDE HAYA COINCIDENCIAS
 int posPerfil = 0;
-char usu[TAM], con[TAM], master[TAM];
+char usu[TAM], con[TAM];
 
 FILE *gestorContras, *gestorPerfil;                                   //DECLARO VARIBALE DE ARCHIVO
 
@@ -132,7 +130,7 @@ void maquinaMenu(){
 
                 int p = -1, q = -1;
                 p = buscarPerfil();
-                printf("Coincidencia en pos %i", p);
+                //printf("Coincidencia en pos %i", p);
 
                 if(p >= 0){                                                      //SI LO QUE DEVUELVE ES POSITIVO Y DISTINTO DE 0
                     //printf("Hay coincidencia\n");           //AVISA QUE SE ENCONTRARON UNA CANTIDAD DE COINCIDENCIAS
@@ -150,10 +148,8 @@ void maquinaMenu(){
                 }
 
                 printf("\nPARA CAMBIAR DE PERFIL, DEBE CERRAR EL PROGRAMA Y VOLVER A INGRESAR!\n");
-                contarCantidadPerfiles();
                 estadoMaquinaMenu = OPCIONES;       //VOY A ESTADO OPCIONES --> ES EL DEL MENU
 
-                //system("cls");
             break;
 
             case OPCIONES:                          //ACA MUESTRO EL MENU
@@ -176,10 +172,7 @@ void maquinaMenu(){
                 if(numOperacion == 5){                                        //VOY A ESTADO ELIMINAR_CONTRASENA
                     estadoMaquinaMenu = ELIMINAR_CONTRASENA;
                 }
-                if(numOperacion == 6){                                        //VOY A ESTADO ELIMINAR_CONTRASENA
-                    estadoMaquinaMenu = INGRESAR_PERFIL;
-                }
-                if(numOperacion == 7){                                        //VOY A ESTADO SALIR
+                if(numOperacion == -1){                                        //VOY A ESTADO SALIR
                     estadoMaquinaMenu = SALIR;
                 }
 
@@ -280,15 +273,10 @@ void inicializar(){                 //INICIALIZA LO QUE TIENE ADENTRO LA ESTRUCT
         strcpy(perfil[i].contra, "\0");                                        //INICIALIZO CON \0
         strcpy(perfil[i].nombreArchivo, "\0");                                 //INICIALIZO CON \0
 
-
-
-    }
-
-    for(i = 0; i<MAXIMO; i++){                                                  //SUMO HASTA QUE LLEGO AL MAXIMO
         strcpy(usu, "\0");
         strcpy(con, "\0");
-    }
 
+    }
 
     return;
 }
@@ -382,7 +370,7 @@ void levantarArchivoContras(int posPerfil){             //AGARRA LO QUE TENGA AD
 
     //system("cls");
 	if (!(gestorContras = fopen(perfil[posPerfil].nombreArchivo, "rb"))){             //SI NO SE PUEDE ABRIR EL ARCHIVO
-        printf("No se puede abrir el archivo\n");           //AVISA
+        //printf("No se puede abrir el archivo\n");           //AVISA
 		return (1);                                         //DEVUELVE 1
 	}
 
