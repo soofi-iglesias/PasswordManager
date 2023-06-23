@@ -8,7 +8,6 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 /*ESTADOS MAQUINA MENU OPERACIONES*/
@@ -157,6 +156,7 @@ void maquinaMenu(){
                 printf("\nIntroduzca el numero de la operacion que desea realizar. \n 1 INGRESAR NUEVA CONTRASE%cA \n 2 MOSTRAR CONTRASE%cAS \n 3 BUSCAR CONTRASE%cAS \n 4 MODIFICAR CONTRASE%cAS \n 5 ELIMINAR CONTRASE%cAS \n 7 SALIR \n", ENIE_MAY, ENIE_MAY, ENIE_MAY, ENIE_MAY, ENIE_MAY);
                 scanf("%i", &numOperacion);
 
+
                 if(numOperacion == 1){                                        //VOY A ESTADO INGRESAR_DATOS
                     estadoMaquinaMenu = INGRESAR_DATOS;
                 }
@@ -172,8 +172,12 @@ void maquinaMenu(){
                 if(numOperacion == 5){                                        //VOY A ESTADO ELIMINAR_CONTRASENA
                     estadoMaquinaMenu = ELIMINAR_CONTRASENA;
                 }
-                if(numOperacion == -1){                                        //VOY A ESTADO SALIR
+                if(numOperacion == 7){                                        //VOY A ESTADO SALIR
                     estadoMaquinaMenu = SALIR;
+                }
+                else{
+                    printf("Esa opcion no existe.\n Por favor, ingresar una opcion valida\n");
+                    estadoMaquinaMenu = OPCIONES;
                 }
 
             break;
@@ -307,13 +311,22 @@ void levantarArchivoPerfiles(){             //AGARRA LO QUE TENGA ADENTRO EL ARC
 }
 
 void ingresoPerfil(){
+    int flag2 = 1;
     printf("Para poder visualizar sus contrase%cas, debe identificarse con su usuario y contrase%ca.\n", ENIE_MIN, ENIE_MIN);
     printf("Usuario:\n");
     //while((getchar()!='\n')) {}
     gets(usu);                                                  //ACA PUEDE CAMBIAR LO QUE VALE FLAG --> DEPENDE DE LO QUE INGRESA EL USUARIO
+    while (strcmp(usu, "\n") != flag2){
+        printf("El usuario no puede quedar vacio.\n Por favor, ingresar un usuario valido\n");
+        gets(usu);
+    }
     printf("El usuario introducido es %s \n", usu);                     //CHEQUEO INGRESO
     printf("Contrase%ca:\n", ENIE_MIN);
     gets(con);                                                  //ACA PUEDE CAMBIAR LO QUE VALE FLAG --> DEPENDE DE LO QUE INGRESA EL USUARIO
+    while (strcmp(con, "\n") != flag2){
+        printf("La contrase%ca no puede quedar vacio.\n Por favor, ingresar una contrase%ca valida\n", ENIE_MIN, ENIE_MIN);
+        gets(con);
+    }
     printf("La contrase%ca introducida es %s \n", ENIE_MIN, con);                     //CHEQUEO INGRESO
 }
 
@@ -389,7 +402,7 @@ void levantarArchivoContras(int posPerfil){             //AGARRA LO QUE TENGA AD
 }
 
 void recibirValores(){              //RECIBE VALORES INGRESADOS POR EL USUARIO POR CONSOLA
-    int i, flag = 1, n;
+    int i, flag = 1, flag2 = 1, n;
 
     for(i = contarCantidadContras(); i<MAXIMO && flag == 1 ; i++){          //SUMA DESDE LA ULTIMA POSICION QUE HAYA DE CONTRASEÑA CARGADA HASTA LLEGAR A MAXIMO
         printf("Desea agregar una nueva contrase%ca? INGRESE: \n 1 SI \n 2 NO\n", ENIE_MIN);
@@ -402,6 +415,10 @@ void recibirValores(){              //RECIBE VALORES INGRESADOS POR EL USUARIO P
             printf("Ingrese el keyword (identificador).\n");
             while((getchar()!='\n')) {}                                     //ESTO ES PARA QUE ELIMINE UN \n SI LE QUEDO EN EL BUFFER
             gets(manager[i].keyword);                                       //GETTEO LO QUE INGRESA COMO KEYWORD Y LO GUARDO
+            while (strcmp(manager[i].keyword, "\n") != flag2){
+                    printf("El keyword no puede quedar vacio.\n Por favor, ingresar un keyword valido\n");
+                    gets(manager[i].keyword);
+            }
             printf("Genial! keyword ingresado con exito.\n");
             printf("El keyword ingresado es: %s \n", manager[i].keyword);   //CHEQUEO INGRESO
 
@@ -412,6 +429,10 @@ void recibirValores(){              //RECIBE VALORES INGRESADOS POR EL USUARIO P
 
             printf("Ingrese la password.\n");                               //IDEM A KEYWORD
             gets(manager[i].contra);
+            while (strcmp(manager[i].contra, "\n") != flag2){
+                    printf("El keyword no puede quedar vacio.\n Por favor, ingresar un keyword valido\n");
+                    gets(manager[i].contra);
+            }
             printf("Genial! Password ingresada con exito.\n");
             printf("La password ingresada es: %s \n", manager[i].contra);
 
@@ -442,13 +463,17 @@ int contarCantidadContras(){        //CUENTA LA CANTIDAD DE CONTRASEÑAS QUE TIEN
 }
 
 int buscarContra(){                 //RECORRE EL VECTOR manager Y SE FIJA SI ENCUENTRA UNA COINCIDENCIA CON LAS KEYWORD --> ES COMO LA FUNCION SAME
-    int a, b, c = 0, i;
+    int a, b, c = 0, i, flag2 = 1;
     char keywordIngresado[TAM];                                                 //CREO UN VECTOR DE CHAR (string) PARA GUARDAR LA KEYWORD QUE INGRESE EL USUARIO
 
         printf("Ingrese el keyword de la contrase%ca que desea.\n", ENIE_MIN);
 
         while((getchar()!='\n')) {}                                             //ESTO ES PARA QUE ELIMINE UN \n SI LE QUEDO EN EL BUFFER
         gets(keywordIngresado);                                                 //GETTEO Y GUARDO
+        while (strcmp(keywordIngresado, "\n") != flag2){
+            printf("El keyword no puede quedar vacio.\n Por favor, ingresar un keyword valido\n");
+            gets(keywordIngresado);
+        }
         printf("Genial! keyword ingresado con exito.\n");
         printf("El keyword ingresado es: %s \n", keywordIngresado);             //CHEQUEO
 
@@ -518,7 +543,7 @@ void mostrarContraPorPos(int max){  //MUESTRA CONTRASEÑAS CON LA POSICION
 }
 
 void modificarContra(int max){      //BUSCA LA CONTRASEÑA CON buscarContra Y TE OFRECE PARA CARGARLE LOS NUEVOS DATOS
-    int i, num;
+    int i, num, flag2 = 1;
 
     if(contarCantidadContras() != 0 && max>0){                                  //SI HAY CONTRASEÑAS GUARDADAS Y LO QUE DEVUELVE buscarContra ES > 0
 
@@ -531,13 +556,25 @@ void modificarContra(int max){      //BUSCA LA CONTRASEÑA CON buscarContra Y TE 
             mostrarContra(posCoincidencia[num-1]);                              //MUESTRO LA CONTRASEÑA DE ESA POSICION
 
             printf("Ingrese las modificaciones.\n");                            //RECIBO DATOS Y LOS GUARDO --> PISO LOS ANTERIORES
+
             printf("keyword:\n");
             while((getchar()!='\n')) {}
             gets(manager[posCoincidencia[num-1]].keyword);
+            while(strcmp(manager[posCoincidencia[num-1]].keyword, "\n") != flag2){
+                printf("El keyword no puede quedar vacio.\n Por favor, ingresar un keyword valido\n");
+                gets(manager[posCoincidencia[num-1]].keyword);
+            }
+
             printf("Usuario:\n");
             gets(manager[posCoincidencia[num-1]].usuario);
+
             printf("Constrase%ca:\n", ENIE_MIN);
             gets(manager[posCoincidencia[num-1]].contra);
+            while(strcmp(manager[posCoincidencia[num-1]].contra, "\n") != flag2){
+                printf("El keyword no puede quedar vacio.\n Por favor, ingresar un keyword valido\n");
+                gets(manager[posCoincidencia[num-1]].contra);
+            }
+
             printf("URL:\n");
             gets(manager[posCoincidencia[num-1]].url);
             printf("__________________________________\n");
@@ -561,12 +598,16 @@ void modificarContra(int max){      //BUSCA LA CONTRASEÑA CON buscarContra Y TE 
 }
 
 void eliminarContra(int max){       //BUSCA LA CONTRASEÑA CON buscarContra Y PONE ingreso = ELIMINADO
-    int i, num;
+    int i, num, flag2 = 1;
 
     if(contarCantidadContras() != 0 && max>0){                                  //SI HAY CONTRASEÑAS GUARDADAS Y LO QUE DEVUELVE buscarContra ES > 0
 
         printf("Ingrese el numero de la contrase%ca que quiere eliminar\n", ENIE_MIN); //PIDO QUE INGRESE CUAL QUIERE MODIFICAR
         scanf("%i", &num);                                                      //LO RECIBO Y GUARDO
+        while(strcmp(num, "\n") != flag2){
+            printf("El numero ingresado no puede quedar vacio.\n Por favor, ingresar un numero valido\n");
+            gets(num);
+        }
 
         printf("Vamos a eliminar la Opcion %i:\n", num);                        // --> HAY QUE AGREGARLE UN NUMERO DE OPCION A LO QUE SE PRINTEA <--
 
@@ -620,6 +661,7 @@ void guardarArchivo(int posPerfil){
 
     return;
 }
+
 
 /*
 void levantarArchivoContras(){             //AGARRA LO QUE TENGA ADENTRO EL ARCHIVO Y LO GUARDA EN EL VECTOR DE ESTRUCTURAS (manager)

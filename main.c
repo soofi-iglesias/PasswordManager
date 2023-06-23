@@ -12,15 +12,15 @@
 #include <string.h>
 
 /*ESTADOS MAQUINA MENU OPERACIONES*/
-#define OPCIONES                0
-#define INGRESAR_DATOS          1
-#define MOSTRAR_CONTRASENA      2
-#define BUSCAR_CONTRASENA       3
-#define MODIFICAR_CONTRASENA    4
-#define ELIMINAR_CONTRASENA     5
-#define INGRESAR_MASTER         7
-#define LEVANTAR_ARCHIVO        8
-#define SALIR                   9
+#define OPCIONES                    0
+#define INGRESAR_DATOS              1
+#define MOSTRAR_CONTRASENA          2
+#define BUSCAR_CONTRASENA           3
+#define MODIFICAR_CONTRASENA        4
+#define ELIMINAR_CONTRASENA         5
+#define LEVANTAR_ARCHIVO_USUARIOS   6
+#define INGRESAR_PERFIL             7
+#define SALIR                       10
 
 /*ESTADOS DE INGRESO*/
 #define INGRESADO       1
@@ -41,7 +41,6 @@
 typedef struct password
 {
     int ingreso;
-    int id;
     char keyword[TAM];
     char usuario[TAM];
     char contra[TAM];
@@ -49,16 +48,33 @@ typedef struct password
 
 }password;
 
+typedef struct user
+{
+    int ingreso;
+    char usuario[TAM];
+    char contra[TAM];
+    char nombreArchivo[TAM];
+
+}user;
+
 
 /*PROTOTIPOS DE FUNCIONES*/
+/*FUNCIONES GENERALES*/
 void maquinaMenu(void);                 //FUNCION GENERAL DE LA MAQUINA DE ESTADOS
-
 void inicializar(void);                 //INICIALIZA LO QUE TIENE ADENTRO LA ESTRUCTURA --> TODO EN NO_INGRESADO O \0 (VACIO)
-void levantarArchivo(void);             //AGARRA LO QUE TENGA ADENTRO EL ARCHIVO Y LO GUARDA EN EL VECTOR DE ESTRUCTURAS (manager)
+void guardarArchivo(int posUsuario);              //ESCRIBE EL ARCHIVO EN EL QUE SE GUARDAN LAS CONTRASEÑAS (MISMO ARCHIVO DE DONDE LEVANTA LOS DATOS)
 
+/*FUNCIONES DE USUARIOS*/
+void ingresoPerfil(void);
+void levantarArchivoPerfiles(void);
+int buscarPerfil(void);
+int crearNuevoPerfil(void);
+int contarCantidadPerfiles(void);
+
+/*FUNCIONES DE CONTRAS*/
+void levantarArchivoContras(int pos);      //AGARRA LO QUE TENGA ADENTRO EL ARCHIVO Y LO GUARDA EN EL VECTOR DE ESTRUCTURAS (manager)
 void recibirValores(void);              //RECIBE VALORES INGRESADOS POR EL USUARIO POR CONSOLA
 int contarCantidadContras(void);        //CUENTA LA CANTIDAD DE CONTRASEÑAS QUE TIENEN ingreso = INGRESADO
-
 int buscarContra(void);                 //RECORRE EL VECTOR manager Y SE FIJA SI ENCUENTRA UNA COINCIDENCIA CON LAS KEYWORD --> ES COMO LA FUNCION SAME
 void mostrarContra(int i);              //MUESTRA CONTRASEÑA
 void mostrarTodasLasContras(void);      //MUESTRA TODAS LAS CONTRASEÑAS INGRESADAS (ingreso = INGRESADO) EN FORMA DE LISTA. LO HACE USANDO mostarContra
@@ -66,15 +82,16 @@ void mostrarContraPorPos(int max);      //MUESTRA CONTRASEÑAS CON LA POSICION
 void modificarContra(int max);          //BUSCA LA CONTRASEÑA CON buscarContra Y TE OFRECE PARA CARGARLE LOS NUEVOS DATOS
 void eliminarContra(int max);           //BUSCA LA CONTRASEÑA CON buscarContra Y PONE ingreso = ELIMINADO
 
-void guardarArchivo(void);              //ESCRIBE EL ARCHIVO EN EL QUE SE GUARDAN LAS CONTRASEÑAS (MISMO ARCHIVO DE DONDE LEVANTA LOS DATOS)
-
 
 /*VARIABLES*/
-int estadoMaquinaMenu = LEVANTAR_ARCHIVO;       //VARIABLE DE CAMBIO DEL SWITCH CASE --> TIENE QUE SER UNA VARIABLE GLOBAL    //INICIA EN UN ESTADO
+int estadoMaquinaMenu = LEVANTAR_ARCHIVO_USUARIOS;       //VARIABLE DE CAMBIO DEL SWITCH CASE --> TIENE QUE SER UNA VARIABLE GLOBAL    //INICIA EN UN ESTADO
 password manager[MAXIMO];                       //DECLARO EL VECTOR manager DEL TIPO password --> ES UN VECTOR DE LA ESTRUCTURA password
+user perfil[MAXIMO];
 int posCoincidencia[MAXIMO];                    //VECTOR QUE LO USO PARA GUARDAR LAS POSICIONES DONDE HAYA COINCIDENCIAS
+int posPerfil = 0;
+char usu[TAM], con[TAM];
 
-FILE *gestor;                                   //DECLARO VARIBALE DE ARCHIVO
+FILE *gestorContras, *gestorPerfil;                                   //DECLARO VARIBALE DE ARCHIVO
 
 
 void main(){
@@ -83,6 +100,7 @@ void main(){
     }
     return;
 }
+
 
 void maquinaMenu(){
 
@@ -93,15 +111,45 @@ void maquinaMenu(){
     switch(estadoMaquinaMenu)
         {
 
-            case LEVANTAR_ARCHIVO:                  //INICIO EN ESTE ESTADO
+            case LEVANTAR_ARCHIVO_USUARIOS:                  //INICIO EN ESTE ESTADO
+
                 inicializar();                      //INICIALIZA LO QUE TIENE ADENTRO LA ESTRUCTURA --> TODO EN NO_INGRESADO O \0 (VACIO)
                 printf("Hola!\n");                  //SALUDO AL USUARIO PORQUE SOMOS AMABLES
-                printf("Levantando archivo!\n");    //AVISO QUE LEVANTO EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
-                levantarArchivo();                  //LLAMO A LA FUNCION
-                printf("Archivo levantado!");       //AVISO QUE YA LEVANTE EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
 
 
+                printf("Ok, levantando archivo de usuarios!\n");    //AVISO QUE LEVANTO EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
+                levantarArchivoPerfiles();
+                printf("Archivo levantado!\n");       //AVISO QUE YA LEVANTE EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
+
+
+                estadoMaquinaMenu = INGRESAR_PERFIL;       //VOY A ESTADO INGRESAR_PERFIL
+            break;
+
+            case INGRESAR_PERFIL:
+                ingresoPerfil();                    //EL USUARIO INGRESA DATOS POR CONSOLA
+
+                int p = -1, q = -1;
+                p = buscarPerfil();
+                //printf("Coincidencia en pos %i", p);
+
+                if(p >= 0){                                                      //SI LO QUE DEVUELVE ES POSITIVO Y DISTINTO DE 0
+                    //printf("Hay coincidencia\n");           //AVISA QUE SE ENCONTRARON UNA CANTIDAD DE COINCIDENCIAS
+                    printf("Ok, levantando archivo de contrase%cas!\n", ENIE_MIN);    //AVISO QUE LEVANTO EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
+                    levantarArchivoContras(p);
+                    printf("Archivo levantado!\n");       //AVISO QUE YA LEVANTE EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
+                }
+                if(p < 0){
+                    printf("No hay coincidencia.\nSe va a crear un nuevo archivo para este usuario.\n");
+                    q = crearNuevoPerfil();
+                    printf("Ok, levantando archivo de contrase%cas!\n", ENIE_MIN);    //AVISO QUE LEVANTO EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
+                    levantarArchivoContras(q);
+                    printf("Archivo levantado!\n");       //AVISO QUE YA LEVANTE EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
+
+                }
+
+                printf("\nPARA CAMBIAR DE PERFIL, DEBE CERRAR EL PROGRAMA Y VOLVER A INGRESAR!\n");
                 estadoMaquinaMenu = OPCIONES;       //VOY A ESTADO OPCIONES --> ES EL DEL MENU
+
             break;
 
             case OPCIONES:                          //ACA MUESTRO EL MENU
@@ -124,7 +172,7 @@ void maquinaMenu(){
                 if(numOperacion == 5){                                        //VOY A ESTADO ELIMINAR_CONTRASENA
                     estadoMaquinaMenu = ELIMINAR_CONTRASENA;
                 }
-                if(numOperacion == 7){                                        //VOY A ESTADO SALIR
+                if(numOperacion == -1){                                        //VOY A ESTADO SALIR
                     estadoMaquinaMenu = SALIR;
                 }
 
@@ -200,19 +248,9 @@ void maquinaMenu(){
 
             break;
 
-            case INGRESAR_MASTER:
-
-                printf("Ok, vamos a ingresar la contrase%ca maestra!\n", ENIE_MIN);                    //ñ: 164    Ñ: 165
-                //recibirValores();
-                //guardarArchivo();
-
-                estadoMaquinaMenu = OPCIONES;                                   //CUANDO TERMINA VUELVE A OPCIONES
-
-            break;
-
             case SALIR:         //ACA SE TERMINA EL PROGRAMA --> SI LA PERSONA NO SALE POR ACA, NO SE GUARDAN LOS CAMBIOS QUE REALICE
-                printf("Guardando archivo...\n");                               //AVISA QUE ESTA GUARDANDO EL ARCHIVO
-                guardarArchivo();                                               //LLAM0 A LA FUNCION QUE GUARDA
+                printf("Guardando archivos...\n\n");                               //AVISA QUE ESTA GUARDANDO EL ARCHIVO
+                guardarArchivo(posPerfil);                                               //LLAM0 A LA FUNCION QUE GUARDA
                 printf("Saliendo del programa. Nos vemos!\n");                  //CUANDO TERMINA, TE DICE CHAU PORQUE SOMOS EDUCADAS
                 exit(0);
             break;
@@ -229,29 +267,122 @@ void inicializar(){                 //INICIALIZA LO QUE TIENE ADENTRO LA ESTRUCT
         strcpy(manager[i].usuario, "\0");                                       //INICIALIZO CON \0
         strcpy(manager[i].contra, "\0");                                        //INICIALIZO CON \0
         strcpy(manager[i].url, "\0");                                           //INICIALIZO CON \0
+
+        perfil[i].ingreso = NO_INGRESADO;                                      //INICIALIZO COMO NO_INGRESADO
+        strcpy(perfil[i].usuario, "\0");                                       //INICIALIZO CON \0
+        strcpy(perfil[i].contra, "\0");                                        //INICIALIZO CON \0
+        strcpy(perfil[i].nombreArchivo, "\0");                                 //INICIALIZO CON \0
+
+        strcpy(usu, "\0");
+        strcpy(con, "\0");
+
     }
 
     return;
 }
 
-void levantarArchivo(){             //AGARRA LO QUE TENGA ADENTRO EL ARCHIVO Y LO GUARDA EN EL VECTOR DE ESTRUCTURAS (manager)
+void levantarArchivoPerfiles(){             //AGARRA LO QUE TENGA ADENTRO EL ARCHIVO Y LO GUARDA EN EL VECTOR DE ESTRUCTURAS (usuarios)
     int i;
 
     //system("cls");                                        //ESTA COSA LIMPIA LO QUE HAYA EN LA CONSOLA
-	if (!(gestor = fopen("Gestor.dat", "rb"))){             //SI NO SE PUEDE ABRIR EL ARCHIVO
-        printf("No se puede abrir el archivo\n");           //AVISA
+
+    if (!(gestorPerfil = fopen("Usuarios.dat", "rb"))){             //SI NO SE PUEDE ABRIR EL ARCHIVO
+        //printf("No se puede abrir el archivo\n");           //AVISA
 		return (1);                                         //DEVUELVE 1
 	}
 
-	for (i = 0; i <= contarCantidadContras(); i++){         //LLAMA A LA FUNCION Y SUMA HASTA QUE SEA IGUAL A LA CANTIDAD DE CONTRASEÑAS CON ingreso = INGRESADO --> DEBERIA HABER 0
-        fread(&manager[i], sizeof(manager[0]), 1, gestor);  //LEE EL ARCHIVO Y LO VA GUARDANDO EN EL VECTOR manager
+	for (i = 0; i <= MAXIMO; i++){         //LLAMA A LA FUNCION Y SUMA HASTA QUE SEA IGUAL A LA CANTIDAD DE CONTRASEÑAS CON ingreso = INGRESADO --> DEBERIA HABER 0
+        fread(&perfil[i], sizeof(perfil[0]), 1, gestorPerfil);  //LEE EL ARCHIVO
     }
 
-	while (!feof(gestor)){                                  //MIENTRAS NO HAYA LLEGADO AL FINAL DEL ARCHIVO gestor (end of file -> eof)
+	while (!feof(gestorPerfil)){                                  //MIENTRAS NO HAYA LLEGADO AL FINAL DEL ARCHIVO gestorContras (end of file -> eof)
 		//printf("\n%100i%100i%100s%100s%100s%255s", manager[i].ingreso, manager[i].id, manager[i].keyword, manager[i].usuario, manager[i].contra, manager[i].url);
-		fread(&manager[i], sizeof(manager[0]), 1, gestor);  //LEE EL ARCHIVO Y LO VA GUARDANDO EN EL VECTOR manager
+		fread(&perfil[i], sizeof(perfil[0]), 1, gestorPerfil);  //LEE EL ARCHIVO Y LO VA GUARDANDO EN EL VECTOR manager
 	}
-	fclose(gestor);                                         //CIERRA EL ARCHIVO gestor
+	printf("Hay %i perfiles.\n", contarCantidadPerfiles());
+	fclose(gestorPerfil);                                         //CIERRA EL ARCHIVO gestorContras
+	printf("\n\n");                                         //PRINTEA ESTO PARA SEPARAR
+
+	return;
+}
+
+void ingresoPerfil(){
+    printf("Para poder visualizar sus contrase%cas, debe identificarse con su usuario y contrase%ca.\n", ENIE_MIN, ENIE_MIN);
+    printf("Usuario:\n");
+    //while((getchar()!='\n')) {}
+    gets(usu);                                                  //ACA PUEDE CAMBIAR LO QUE VALE FLAG --> DEPENDE DE LO QUE INGRESA EL USUARIO
+    printf("El usuario introducido es %s \n", usu);                     //CHEQUEO INGRESO
+    printf("Contrase%ca:\n", ENIE_MIN);
+    gets(con);                                                  //ACA PUEDE CAMBIAR LO QUE VALE FLAG --> DEPENDE DE LO QUE INGRESA EL USUARIO
+    printf("La contrase%ca introducida es %s \n", ENIE_MIN, con);                     //CHEQUEO INGRESO
+}
+
+int buscarPerfil(){
+    int a, i;
+
+    posPerfil = -1;
+
+    for(i=0; i<MAXIMO ; i++){
+        if(perfil[i].ingreso == INGRESADO){
+            if(strlen(perfil[i].usuario) == strlen(usu) && strlen(perfil[i].contra) == strlen(con)){     //USO SRTLEN (funcion de libreria) PARA VER SI TIENEN EL MISMO TAMAÑO
+                if(strcmp(perfil[i].usuario, usu) == 0 && strcmp(perfil[i].contra, con) == 0){      //USO STRCMP (funcion de libreria) PARA VER SI SON IGUALES
+                    printf("Hay coincidencia!\n");                         //ESTO LO USO PARA DEBUGGEAR PERO AHORA NO
+                    posPerfil = i;
+                }
+            }
+        }
+    }
+
+    return posPerfil;
+}
+
+int crearNuevoPerfil(){
+    int i,a;
+
+    posPerfil = -1;
+    i = contarCantidadPerfiles();
+
+    if(perfil[i].ingreso == NO_INGRESADO){
+        perfil[i].ingreso = 1;
+        strcpy(perfil[i].usuario, usu);                   //LE COPIO usu A USUARIO EN LA POSICION DEL STRUCT
+        strcpy(perfil[i].contra, con);                    //IDEM PERO CON con y CONTRA
+        strcpy(perfil[i].nombreArchivo, usu);             //ASIGNO EL USUARIO COMO NOMBRE DE ARCHIVO
+        strcat(perfil[i].nombreArchivo,".dat");
+        posPerfil = i;
+    }
+    printf("Ahora hay %i perfiles.\n", contarCantidadPerfiles());
+
+    return posPerfil;
+}
+
+int contarCantidadPerfiles(){        //CUENTA LA CANTIDAD DE CONTRASEÑAS QUE TIENEN ingreso = INGRESADO
+    int i, cantidad = 0;
+    for(i=0; i<TAM; i++){                                   //CUENTA HASTA EL FINAL DEL VECTOR
+        if(perfil[i].ingreso){                //SI ingreso = INGRESADO
+            cantidad++;                                     //CUENTO CONTRASEÑA
+        }
+    }
+    return cantidad;                                        //DEVUELVE LA CANTIDAD DE CONTRASEÑAS INGRESADAS --> OSEA HASTA QUE POSICION DEL VECTOR ESTA OCUPADO CON INFORMACION Y NO ESTA VACIO
+}
+
+void levantarArchivoContras(int posPerfil){             //AGARRA LO QUE TENGA ADENTRO EL ARCHIVO Y LO GUARDA EN EL VECTOR DE ESTRUCTURAS (manager)
+    int i;
+
+    //system("cls");
+	if (!(gestorContras = fopen(perfil[posPerfil].nombreArchivo, "rb"))){             //SI NO SE PUEDE ABRIR EL ARCHIVO
+        //printf("No se puede abrir el archivo\n");           //AVISA
+		return (1);                                         //DEVUELVE 1
+	}
+
+	for (i = 0; i <= MAXIMO; i++){         //LLAMA A LA FUNCION Y SUMA HASTA QUE SEA IGUAL A LA CANTIDAD DE CONTRASEÑAS CON ingreso = INGRESADO --> DEBERIA HABER 0
+        fread(&manager[i], sizeof(manager[0]), 1, gestorContras);  //LEE EL ARCHIVO
+    }
+
+	while (!feof(gestorContras)){                                  //MIENTRAS NO HAYA LLEGADO AL FINAL DEL ARCHIVO gestorContras (end of file -> eof)
+		//printf("\n%100i%100i%100s%100s%100s%255s", manager[i].ingreso, manager[i].id, manager[i].keyword, manager[i].usuario, manager[i].contra, manager[i].url);
+		fread(&manager[i], sizeof(manager[0]), 1, gestorContras);  //LEE EL ARCHIVO Y LO VA GUARDANDO EN EL VECTOR manager
+	}
+	fclose(gestorContras);                                         //CIERRA EL ARCHIVO gestorContras
 	printf("\n\n");                                         //PRINTEA ESTO PARA SEPARAR
 
 	return;
@@ -306,6 +437,7 @@ int contarCantidadContras(){        //CUENTA LA CANTIDAD DE CONTRASEÑAS QUE TIEN
             cantidad++;                                     //CUENTO CONTRASEÑA
         }
     }
+    //printf("Hay %i contras\n", cantidad);
     return cantidad;                                        //DEVUELVE LA CANTIDAD DE CONTRASEÑAS INGRESADAS --> OSEA HASTA QUE POSICION DEL VECTOR ESTA OCUPADO CON INFORMACION Y NO ESTA VACIO
 }
 
@@ -453,21 +585,62 @@ void eliminarContra(int max){       //BUSCA LA CONTRASEÑA CON buscarContra Y PON
     return;
 }
 
-void guardarArchivo(){
-    int i;
+void guardarArchivo(int posPerfil){
+    int i,j = 0;
 
-    if (!(gestor = fopen("Gestor.dat", "wb"))){                                 //SI NO SE PUEDE ABRIR EL ARCHIVO
+    if (!(gestorContras = fopen(perfil[posPerfil].nombreArchivo, "wb"))){                                 //SI NO SE PUEDE ABRIR EL ARCHIVO
         printf("No se puede abrir el archivo\n");                               //AVISA
         return (1);                                                             //DEVUELVE 1
     }
 
+    if (!(gestorPerfil = fopen("Usuarios.dat", "wb"))){                                 //SI NO SE PUEDE ABRIR EL ARCHIVO
+        printf("No se puede abrir el archivo Usuarios\n");                               //AVISA
+        return (1);                                                             //DEVUELVE 1
+    }
+
+    printf("Guardando contrase%cas...\n", ENIE_MIN);
     for (i = 0; i <= contarCantidadContras(); i++){                             //INCREMENTA HASTA QUE LLEGA A LA CANTIDAD DE CONTRASEÑAS INGRESADAS
         if(manager[i].ingreso == INGRESADO){                                    //SI ingreso = INGRESADO
-            fwrite(&manager[i], sizeof(manager[0]), 1, gestor);                 //ESCRIBE LA CONTRASEÑA EN EL ARCHIVO
+            fwrite(&manager[i], sizeof(manager[0]), 1, gestorContras);                 //ESCRIBE LA CONTRASEÑA EN EL ARCHIVO
         }
     }
-    fclose(gestor);                                                             //CIERRO EL ARCHIVO
+
+    for (j = 0; j <= contarCantidadPerfiles(); j++){                             //INCREMENTA HASTA QUE LLEGA A LA CANTIDAD DE CONTRASEÑAS INGRESADAS
+        if(perfil[j].ingreso == INGRESADO){                                    //SI ingreso = INGRESADO
+            //printf("Usuarios:\n");
+            //printf("%s\n", perfil[j].usuario);
+            printf("Guardando perfil...\n");
+            fwrite(&perfil[j], sizeof(perfil[0]), 1, gestorPerfil);                 //ESCRIBE LA CONTRASEÑA EN EL ARCHIVO
+        }
+    }
+
+    fclose(gestorContras);                                                             //CIERRO EL ARCHIVO
+    fclose(gestorPerfil);                                                             //CIERRO EL ARCHIVO
     printf("\n");                                                               //PRINTEA ESTO DE ONDA
 
     return;
 }
+
+/*
+void levantarArchivoContras(){             //AGARRA LO QUE TENGA ADENTRO EL ARCHIVO Y LO GUARDA EN EL VECTOR DE ESTRUCTURAS (manager)
+    int i;
+
+    //system("cls");                                        //ESTA COSA LIMPIA LO QUE HAYA EN LA CONSOLA
+	if (!(gestorContras = fopen("Gestor.dat", "rb"))){             //SI NO SE PUEDE ABRIR EL ARCHIVO
+        printf("No se puede abrir el archivo\n");           //AVISA
+		return (1);                                         //DEVUELVE 1
+	}
+
+	for (i = 0; i <= contarCantidadContras(); i++){         //LLAMA A LA FUNCION Y SUMA HASTA QUE SEA IGUAL A LA CANTIDAD DE CONTRASEÑAS CON ingreso = INGRESADO --> DEBERIA HABER 0
+        fread(&manager[i], sizeof(manager[0]), 1, gestorContras);  //LEE EL ARCHIVO Y LO VA GUARDANDO EN EL VECTOR manager
+    }
+
+	while (!feof(gestorContras)){                                  //MIENTRAS NO HAYA LLEGADO AL FINAL DEL ARCHIVO gestorContras (end of file -> eof)
+		//printf("\n%100i%100i%100s%100s%100s%255s", manager[i].ingreso, manager[i].id, manager[i].keyword, manager[i].usuario, manager[i].contra, manager[i].url);
+		fread(&manager[i], sizeof(manager[0]), 1, gestorContras);  //LEE EL ARCHIVO Y LO VA GUARDANDO EN EL VECTOR manager
+	}
+	fclose(gestorContras);                                         //CIERRA EL ARCHIVO gestorContras
+	printf("\n\n");                                         //PRINTEA ESTO PARA SEPARAR
+
+	return;
+}*/
