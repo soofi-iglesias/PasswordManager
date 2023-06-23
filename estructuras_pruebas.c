@@ -61,6 +61,7 @@ typedef struct user
 /*FUNCIONES GENERALES*/
 void maquinaMenu(void);                 //FUNCION GENERAL DE LA MAQUINA DE ESTADOS
 void inicializar(void);                 //INICIALIZA LO QUE TIENE ADENTRO LA ESTRUCTURA --> TODO EN NO_INGRESADO O \0 (VACIO)
+void resumen(void);
 void guardarArchivo(int posUsuario);              //ESCRIBE EL ARCHIVO EN EL QUE SE GUARDAN LAS CONTRASEÑAS (MISMO ARCHIVO DE DONDE LEVANTA LOS DATOS)
 
 /*FUNCIONES DE USUARIOS*/
@@ -73,7 +74,7 @@ int contarCantidadPerfiles(void);
 /*FUNCIONES DE CONTRAS*/
 void levantarArchivoContras(int pos);      //AGARRA LO QUE TENGA ADENTRO EL ARCHIVO Y LO GUARDA EN EL VECTOR DE ESTRUCTURAS (manager)
 void recibirValores(void);              //RECIBE VALORES INGRESADOS POR EL USUARIO POR CONSOLA
-int contarCantidadContras(void);        //CUENTA LA CANTIDAD DE CONTRASEÑAS QUE TIENEN ingreso = INGRESADO
+int contarCantidadContras(int estado);        //CUENTA LA CANTIDAD DE CONTRASEÑAS QUE TIENEN ingreso = INGRESADO
 int buscarContra(void);                 //RECORRE EL VECTOR manager Y SE FIJA SI ENCUENTRA UNA COINCIDENCIA CON LAS KEYWORD --> ES COMO LA FUNCION SAME
 void mostrarContra(int i);              //MUESTRA CONTRASEÑA
 void mostrarTodasLasContras(void);      //MUESTRA TODAS LAS CONTRASEÑAS INGRESADAS (ingreso = INGRESADO) EN FORMA DE LISTA. LO HACE USANDO mostarContra
@@ -133,16 +134,16 @@ void maquinaMenu(){
 
                 if(p >= 0){                                                      //SI LO QUE DEVUELVE ES POSITIVO Y DISTINTO DE 0
                     //printf("Hay coincidencia\n");           //AVISA QUE SE ENCONTRARON UNA CANTIDAD DE COINCIDENCIAS
-                    printf("Ok, levantando archivo de contrase%cas!\n", ENIE_MIN);    //AVISO QUE LEVANTO EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
+                    printf("Levantando archivo de contrase%cas...\n", ENIE_MIN);    //AVISO QUE LEVANTO EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
                     levantarArchivoContras(p);
-                    printf("Archivo levantado!\n");       //AVISO QUE YA LEVANTE EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
+                    printf("\nArchivo levantado!\n");       //AVISO QUE YA LEVANTE EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
                 }
                 if(p < 0){
-                    printf("No hay coincidencia.\nSe va a crear un nuevo archivo para este usuario.\n");
+                    printf("\nNo existe ningun perfil que coincida con los datos ingresados.\nSe va a crear un nuevo archivo para este perfil.\n\n");
                     q = crearNuevoPerfil();
-                    printf("Ok, levantando archivo de contrase%cas!\n", ENIE_MIN);    //AVISO QUE LEVANTO EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
+                    printf("Levantando archivo de contrase%cas...\n", ENIE_MIN);    //AVISO QUE LEVANTO EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
                     levantarArchivoContras(q);
-                    printf("Archivo levantado!\n");       //AVISO QUE YA LEVANTE EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
+                    printf("\nArchivo levantado!\n");       //AVISO QUE YA LEVANTE EL ARCHIVO --> BORRABLE --> LO USO PARA CHEQUEAR QUE FUNCIONE TODO OK
 
                 }
 
@@ -174,10 +175,6 @@ void maquinaMenu(){
                 }
                 if(numOperacion == 7){                                        //VOY A ESTADO SALIR
                     estadoMaquinaMenu = SALIR;
-                }
-                else{
-                    printf("Esa opcion no existe.\n Por favor, ingresar una opcion valida\n");
-                    estadoMaquinaMenu = OPCIONES;
                 }
 
             break;
@@ -253,7 +250,9 @@ void maquinaMenu(){
             break;
 
             case SALIR:         //ACA SE TERMINA EL PROGRAMA --> SI LA PERSONA NO SALE POR ACA, NO SE GUARDAN LOS CAMBIOS QUE REALICE
+                system("cls");                                        //ESTA COSA LIMPIA LO QUE HAYA EN LA CONSOLA
                 printf("Guardando archivos...\n\n");                               //AVISA QUE ESTA GUARDANDO EL ARCHIVO
+                resumen();
                 guardarArchivo(posPerfil);                                               //LLAM0 A LA FUNCION QUE GUARDA
                 printf("Saliendo del programa. Nos vemos!\n");                  //CUANDO TERMINA, TE DICE CHAU PORQUE SOMOS EDUCADAS
                 exit(0);
@@ -287,8 +286,6 @@ void inicializar(){                 //INICIALIZA LO QUE TIENE ADENTRO LA ESTRUCT
 
 void levantarArchivoPerfiles(){             //AGARRA LO QUE TENGA ADENTRO EL ARCHIVO Y LO GUARDA EN EL VECTOR DE ESTRUCTURAS (usuarios)
     int i;
-
-    //system("cls");                                        //ESTA COSA LIMPIA LO QUE HAYA EN LA CONSOLA
 
     if (!(gestorPerfil = fopen("Usuarios.dat", "rb"))){             //SI NO SE PUEDE ABRIR EL ARCHIVO
         //printf("No se puede abrir el archivo\n");           //AVISA
@@ -339,7 +336,7 @@ int buscarPerfil(){
         if(perfil[i].ingreso == INGRESADO){
             if(strlen(perfil[i].usuario) == strlen(usu) && strlen(perfil[i].contra) == strlen(con)){     //USO SRTLEN (funcion de libreria) PARA VER SI TIENEN EL MISMO TAMAÑO
                 if(strcmp(perfil[i].usuario, usu) == 0 && strcmp(perfil[i].contra, con) == 0){      //USO STRCMP (funcion de libreria) PARA VER SI SON IGUALES
-                    printf("Hay coincidencia!\n");                         //ESTO LO USO PARA DEBUGGEAR PERO AHORA NO
+                    printf("\nExiste un perfil que coincide con los datos ingresados.\n\n");                         //ESTO LO USO PARA DEBUGGEAR PERO AHORA NO
                     posPerfil = i;
                 }
             }
@@ -363,7 +360,7 @@ int crearNuevoPerfil(){
         strcat(perfil[i].nombreArchivo,".dat");
         posPerfil = i;
     }
-    printf("Ahora hay %i perfiles.\n", contarCantidadPerfiles());
+    printf("Nuevo perfil creado!\nAhora hay %i perfiles.\n\n", contarCantidadPerfiles());
 
     return posPerfil;
 }
@@ -404,7 +401,7 @@ void levantarArchivoContras(int posPerfil){             //AGARRA LO QUE TENGA AD
 void recibirValores(){              //RECIBE VALORES INGRESADOS POR EL USUARIO POR CONSOLA
     int i, flag = 1, flag2 = 1, n;
 
-    for(i = contarCantidadContras(); i<MAXIMO && flag == 1 ; i++){          //SUMA DESDE LA ULTIMA POSICION QUE HAYA DE CONTRASEÑA CARGADA HASTA LLEGAR A MAXIMO
+    for(i = contarCantidadContras(INGRESADO); i<MAXIMO && flag == 1 ; i++){          //SUMA DESDE LA ULTIMA POSICION QUE HAYA DE CONTRASEÑA CARGADA HASTA LLEGAR A MAXIMO
         printf("Desea agregar una nueva contrase%ca? INGRESE: \n 1 SI \n 2 NO\n", ENIE_MIN);
         scanf("%i",&flag);                                                  //ACA PUEDE CAMBIAR LO QUE VALE FLAG --> DEPENDE DE LO QUE INGRESA EL USUARIO
         printf("La opcion introducida es %i \n", flag);                     //CHEQUEO INGRESO
@@ -451,10 +448,10 @@ void recibirValores(){              //RECIBE VALORES INGRESADOS POR EL USUARIO P
     return;
 }
 
-int contarCantidadContras(){        //CUENTA LA CANTIDAD DE CONTRASEÑAS QUE TIENEN ingreso = INGRESADO
+int contarCantidadContras(int estado){        //CUENTA LA CANTIDAD DE CONTRASEÑAS QUE TIENEN ingreso = INGRESADO
     int i, cantidad = 0;
     for(i=0; i<TAM; i++){                                   //CUENTA HASTA EL FINAL DEL VECTOR
-        if(manager[i].ingreso == INGRESADO){                //SI ingreso = INGRESADO
+        if(manager[i].ingreso == estado){                //SI ingreso = INGRESADO
             cantidad++;                                     //CUENTO CONTRASEÑA
         }
     }
@@ -514,12 +511,12 @@ void mostrarContra(int i){          //MUESTRA CONTRASEÑA
 void mostrarTodasLasContras(){      //MUESTRA TODAS LAS CONTRASEÑAS INGRESADAS (ingreso = INGRESADO) EN FORMA DE LISTA. LO HACE USANDO mostarContra
     int i;
 
-    if(contarCantidadContras() != 0){                                           //SI HAY CONTRASEÑAS GUARDADAS
+    if(contarCantidadContras(INGRESADO) != 0){                                           //SI HAY CONTRASEÑAS GUARDADAS
         for(i = 0; i<MAXIMO; i++){                                              //INCREMENTO i
             mostrarContra(i);                                                   //LE VOY MANDANDO i PARA QUE EN LA FUNCION RECORRA EL VECTOR
         }
     }
-    if(contarCantidadContras() == 0){                                           //SI NO HAY CONTRASEÑAS GUARDADAS
+    if(contarCantidadContras(INGRESADO) == 0){                                           //SI NO HAY CONTRASEÑAS GUARDADAS
         printf("Todavia no hay contrase%cas guardadas.\nPor favor, ingrese sus contrase%cas.\n", ENIE_MIN, ENIE_MIN);   //AVISO
     }
 
@@ -529,12 +526,12 @@ void mostrarTodasLasContras(){      //MUESTRA TODAS LAS CONTRASEÑAS INGRESADAS (
 void mostrarContraPorPos(int max){  //MUESTRA CONTRASEÑAS CON LA POSICION
     int i, j;
 
-    if(contarCantidadContras() != 0){                                           //SI HAY CONTRASEÑAS GUARDADAS
+    if(contarCantidadContras(INGRESADO) != 0){                                           //SI HAY CONTRASEÑAS GUARDADAS
         for(i = 0; i < max; i++){                                               //INCREMENTO i HASTA LLEGAR A LA CANTIDAD DE COINCIDENCIAS
                 mostrarContra(posCoincidencia[i]);                              //LLAMO A posCoincidencia  Y LE PASO i, Y A mostrarContra LE PASO LO QUE DEVUELVE posCoincidencia --> LE MANDO SOLO LAS POSICIONES DONDE HAY COINCIDENCIA
         }
     }
-    if(contarCantidadContras() == 0){                                           //SI NO HAY CONTRASEÑAS GUARDADAS
+    if(contarCantidadContras(INGRESADO) == 0){                                           //SI NO HAY CONTRASEÑAS GUARDADAS
         printf("Todavia no hay contrase%cas guardadas.\nPor favor, ingrese sus contrase%cas.\n", ENIE_MIN, ENIE_MIN);   //AVISO
     }
 
@@ -545,7 +542,7 @@ void mostrarContraPorPos(int max){  //MUESTRA CONTRASEÑAS CON LA POSICION
 void modificarContra(int max){      //BUSCA LA CONTRASEÑA CON buscarContra Y TE OFRECE PARA CARGARLE LOS NUEVOS DATOS
     int i, num, flag2 = 1;
 
-    if(contarCantidadContras() != 0 && max>0){                                  //SI HAY CONTRASEÑAS GUARDADAS Y LO QUE DEVUELVE buscarContra ES > 0
+    if(contarCantidadContras(INGRESADO) != 0 && max>0){                                  //SI HAY CONTRASEÑAS GUARDADAS Y LO QUE DEVUELVE buscarContra ES > 0
 
         printf("Ingrese el numero de la contrase%ca que quiere modificar\n", ENIE_MIN); //PIDO QUE INGRESE CUAL QUIERE MODIFICAR
         scanf("%i", &num);                                                      //LO RECIBO Y GUARDO
@@ -589,7 +586,7 @@ void modificarContra(int max){      //BUSCA LA CONTRASEÑA CON buscarContra Y TE 
         }
     }
 
-    if(contarCantidadContras() == 0){                                           //SI NO HAY CONTRASEÑAS GUARDADAS
+    if(contarCantidadContras(INGRESADO) == 0){                                           //SI NO HAY CONTRASEÑAS GUARDADAS
         printf("Todavia no hay contrase%cas guardadas.\nPor favor, ingrese sus contrase%cas.\n", ENIE_MIN, ENIE_MIN);   //AVISO
     }
 
@@ -600,14 +597,10 @@ void modificarContra(int max){      //BUSCA LA CONTRASEÑA CON buscarContra Y TE 
 void eliminarContra(int max){       //BUSCA LA CONTRASEÑA CON buscarContra Y PONE ingreso = ELIMINADO
     int i, num, flag2 = 1;
 
-    if(contarCantidadContras() != 0 && max>0){                                  //SI HAY CONTRASEÑAS GUARDADAS Y LO QUE DEVUELVE buscarContra ES > 0
+    if(contarCantidadContras(INGRESADO) != 0 && max>0){                                  //SI HAY CONTRASEÑAS GUARDADAS Y LO QUE DEVUELVE buscarContra ES > 0
 
         printf("Ingrese el numero de la contrase%ca que quiere eliminar\n", ENIE_MIN); //PIDO QUE INGRESE CUAL QUIERE MODIFICAR
         scanf("%i", &num);                                                      //LO RECIBO Y GUARDO
-        while(strcmp(num, "\n") != flag2){
-            printf("El numero ingresado no puede quedar vacio.\n Por favor, ingresar un numero valido\n");
-            gets(num);
-        }
 
         printf("Vamos a eliminar la Opcion %i:\n", num);                        // --> HAY QUE AGREGARLE UN NUMERO DE OPCION A LO QUE SE PRINTEA <--
 
@@ -619,12 +612,19 @@ void eliminarContra(int max){       //BUSCA LA CONTRASEÑA CON buscarContra Y PON
         }
     }
 
-    if(contarCantidadContras() == 0){                                           //SI NO HAY CONTRASEÑAS GUARDADAS
+    if(contarCantidadContras(INGRESADO) == 0){                                           //SI NO HAY CONTRASEÑAS GUARDADAS
         printf("Todavia no hay contrase%cas guardadas.\nPor favor, ingrese sus contrase%cas.\n", ENIE_MIN, ENIE_MIN);   //AVISO
     }
 
     return;
 }
+
+void resumen(){
+    printf("\n\nRESUMEN\n");
+    printf("\t%i CONTRAE%cAS INGRESADAS\n\t%i CONTRAE%cAS ELIMINADAS\n\n", contarCantidadContras(INGRESADO), ENIE_MAY, contarCantidadContras(ELIMINADO), ENIE_MAY);
+    return;
+}
+
 
 void guardarArchivo(int posPerfil){
     int i,j = 0;
@@ -640,17 +640,17 @@ void guardarArchivo(int posPerfil){
     }
 
     printf("Guardando contrase%cas...\n", ENIE_MIN);
-    for (i = 0; i <= contarCantidadContras(); i++){                             //INCREMENTA HASTA QUE LLEGA A LA CANTIDAD DE CONTRASEÑAS INGRESADAS
+    for (i = 0; i <= contarCantidadContras(INGRESADO); i++){                             //INCREMENTA HASTA QUE LLEGA A LA CANTIDAD DE CONTRASEÑAS INGRESADAS
         if(manager[i].ingreso == INGRESADO){                                    //SI ingreso = INGRESADO
             fwrite(&manager[i], sizeof(manager[0]), 1, gestorContras);                 //ESCRIBE LA CONTRASEÑA EN EL ARCHIVO
         }
     }
 
+    printf("Guardando perfil...\n");
     for (j = 0; j <= contarCantidadPerfiles(); j++){                             //INCREMENTA HASTA QUE LLEGA A LA CANTIDAD DE CONTRASEÑAS INGRESADAS
         if(perfil[j].ingreso == INGRESADO){                                    //SI ingreso = INGRESADO
             //printf("Usuarios:\n");
             //printf("%s\n", perfil[j].usuario);
-            printf("Guardando perfil...\n");
             fwrite(&perfil[j], sizeof(perfil[0]), 1, gestorPerfil);                 //ESCRIBE LA CONTRASEÑA EN EL ARCHIVO
         }
     }
@@ -662,6 +662,7 @@ void guardarArchivo(int posPerfil){
     return;
 }
 
+//system("cls");                                        //ESTA COSA LIMPIA LO QUE HAYA EN LA CONSOLA
 
 /*
 void levantarArchivoContras(){             //AGARRA LO QUE TENGA ADENTRO EL ARCHIVO Y LO GUARDA EN EL VECTOR DE ESTRUCTURAS (manager)
@@ -673,7 +674,7 @@ void levantarArchivoContras(){             //AGARRA LO QUE TENGA ADENTRO EL ARCH
 		return (1);                                         //DEVUELVE 1
 	}
 
-	for (i = 0; i <= contarCantidadContras(); i++){         //LLAMA A LA FUNCION Y SUMA HASTA QUE SEA IGUAL A LA CANTIDAD DE CONTRASEÑAS CON ingreso = INGRESADO --> DEBERIA HABER 0
+	for (i = 0; i <= contarCantidadContras(INGRESADO); i++){         //LLAMA A LA FUNCION Y SUMA HASTA QUE SEA IGUAL A LA CANTIDAD DE CONTRASEÑAS CON ingreso = INGRESADO --> DEBERIA HABER 0
         fread(&manager[i], sizeof(manager[0]), 1, gestorContras);  //LEE EL ARCHIVO Y LO VA GUARDANDO EN EL VECTOR manager
     }
 
